@@ -19,7 +19,7 @@ describe("With sample 1", () => {
         totalDebit: 90667.3,
         totalCredit: 90667.3,
       };
-      expect(result.accounts.length).toBe(expectedResult);
+      expect(result.balance).toEqual(expectedResult);
     });
   });
 
@@ -68,7 +68,7 @@ describe("With sample 3", () => {
         totalDebit: 152401.05,
         totalCredit: 152401.05,
       };
-      expect(result.accounts.length).toBe(expectedResult);
+      expect(result.balance).toEqual(expectedResult);
     });
   });
 
