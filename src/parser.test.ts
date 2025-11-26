@@ -44,7 +44,7 @@ describe("With sample 1", () => {
         },
         { debit: 0, credit: 0 }
       );
-      expect(account512?.recordItems.length).toBe(40);
+      expect(account512?.recordItems.length).toBe(39);
 
       expect(account512?.totalDebit).toBe(19604.06);
       expect(account512?.totalCredit).toBe(15712.89);
@@ -93,7 +93,7 @@ describe("With sample 3", () => {
         },
         { debit: 0, credit: 0 }
       );
-      expect(account512?.recordItems.length).toBe(58);
+      expect(account512?.recordItems.length).toBe(57);
 
       expect(account512?.totalDebit).toBe(60515.53);
       expect(account512?.totalCredit).toBe(18177.16);

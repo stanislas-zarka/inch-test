@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import { existsSync, readFileSync } from "fs";
 import {
   dateRegex,
   parseNumber,
@@ -22,9 +22,9 @@ export async function parse(inputCSVFile: string): Promise<TParsingResult> {
   // Step 1 - Read the file
   let fileContent: string;
   try {
-    if (fs.existsSync(inputCSVFile)) {
+    if (existsSync(inputCSVFile)) {
       console.log(`Reading file: ${inputCSVFile}`);
-      fileContent = fs.readFileSync(inputCSVFile, "utf8");
+      fileContent = readFileSync(inputCSVFile, "utf8");
     }
   } catch (e) {
     console.error(
@@ -40,7 +40,7 @@ export async function parse(inputCSVFile: string): Promise<TParsingResult> {
 
   // Step 2 - Split into lines, respecting quotes
   console.log("Splitting file content into lines...");
-  const lines = splitRowsRespectingQuotes(fileContent);
+  const lines: string[] = splitRowsRespectingQuotes(fileContent);
 
   // Step 3 - Parse lines using state machine
   console.log("Parsing lines...");
@@ -53,8 +53,6 @@ export async function parse(inputCSVFile: string): Promise<TParsingResult> {
 
   // Step 3 - b - Process each line
   lines.forEach((line) => {
-    if (!line || !line.trim()) return;
-
     // Step 3 - b - 1 - Split line into fields
     const fields: string[] = splitFields(line);
 
@@ -64,6 +62,7 @@ export async function parse(inputCSVFile: string): Promise<TParsingResult> {
       // Account header: set current account and label (if present)
       state = ParserState.IN_ACCOUNT;
       currentAccountCode = fields[0];
+      // fields[1] is ignored
       const accountLabel: string = fields[2] || currentAccountCode;
       // Step 3 - b - 3 - Ensure account exists in the map
       let account: TAccountWithRecordItems =
@@ -91,6 +90,7 @@ export async function parse(inputCSVFile: string): Promise<TParsingResult> {
       currentAccountCode
     ) {
       const date: Date = parseDate(fields[0]);
+      // fields[1] is ignored
       const label: string = fields[2];
       const invoiceNumber: string = fields[3];
       const debit: number = parseNumber(fields[5]);
@@ -154,25 +154,27 @@ export async function parse(inputCSVFile: string): Promise<TParsingResult> {
   const accounts: TAccountWithRecordItems[] = Array.from(accountsMap.values());
 
   // Step 4 - Compute totals with proper rounding
+  console.log("Computing totals with rounding...");
   // Recompute per-account totals using rounding after each addition (same as tests)
   let aggTotalDebit: number = 0;
   let aggTotalCredit: number = 0;
-  accounts.forEach((acc) => {
+  accounts.forEach((account) => {
     let debit: number = 0;
     let credit: number = 0;
-    acc.recordItems.forEach((it) => {
-      debit = round2(debit + it.debit);
-      credit = round2(credit + it.credit);
+    account.recordItems.forEach((item) => {
+      debit = round2(debit + item.debit);
+      credit = round2(credit + item.credit);
     });
-    acc.totalDebit = debit;
-    acc.totalCredit = credit;
-    aggTotalDebit = round2(aggTotalDebit + acc.totalDebit);
-    aggTotalCredit = round2(aggTotalCredit + acc.totalCredit);
+    account.totalDebit = debit;
+    account.totalCredit = credit;
+    aggTotalDebit = round2(aggTotalDebit + account.totalDebit);
+    aggTotalCredit = round2(aggTotalCredit + account.totalCredit);
   });
   totalDebit = aggTotalDebit;
   totalCredit = aggTotalCredit;
 
   // Step 5 - Return final result
+  console.log("Parsing complete.");
   return {
     accounts,
     balance: { totalDebit, totalCredit },
